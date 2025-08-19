@@ -1,2 +1,5 @@
  # estruturas_dados
- repositório para a disciplina Estrutura de Dados do curso Bacheralado em Sistemas de Informação, IFBA, 2025.2
+
+Repositório da disciplina **Estruturas de Dados**  
+Curso: Bacharelado em Sistemas de Informação - IFBA  
+Semestre: 2025.2
