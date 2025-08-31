@@ -1,6 +1,6 @@
 package br.edu.ifba.bsi.ed.stack;
 
-public class InvertedArrayStack implements Stackable {
+public class InvertedArrayStack implements Stackable{
     private Object[] data;
     private int pointerTop;
 

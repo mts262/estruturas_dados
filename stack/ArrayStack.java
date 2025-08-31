@@ -1,6 +1,6 @@
 package br.edu.ifba.bsi.ed.stack;
 
-public class ArrayStack implements Stackable {
+public class ArrayStack implements Stackable{
     private Object[] data;
     private int pointerTop;
 
