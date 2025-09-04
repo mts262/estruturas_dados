@@ -1,27 +1,31 @@
 package br.edu.ifba.bsi.ed.queue;
 
-public class ArrayQueue implements Queueable {
+public class CircularArrayQueue implements Queueable{
     private Object[] data;
     private int head;
     private int tail;
+    private int numberElements;
 
-    public ArrayQueue () {
+    public CircularArrayQueue() {
         this(10);
     }
 
-    public ArrayQueue(int length) {
+    public CircularArrayQueue(int length) {
         this.data = new Object[length];
         head = 0;
         tail = -1;
+        numberElements = 0;
     }
+
 
     @Override
     public void enqueue(Object data) {
         if (isFull()) {
             System.err.println("Queue is full!");
         } else {
-            tail++;
+            tail = next(tail);
             this.data[tail] = data;
+            numberElements++;
         }
     }
 
@@ -32,9 +36,15 @@ public class ArrayQueue implements Queueable {
             System.err.println("Queue is empty!");
         } else {
             aux = data[head];
-            head++;
+            head = next(head);
+            numberElements--;
         }
         return aux;
+    }
+
+    private int next(int head) {
+        return (head++) % data.length;
+
     }
 
     @Override
@@ -50,20 +60,22 @@ public class ArrayQueue implements Queueable {
 
     @Override
     public boolean isEmpty() {
-        return (head > tail);
+        return (numberElements == 0);
     }
 
     @Override
     public boolean isFull() {
-        return (tail == data.length-1);
+        return (numberElements == data.length);
     }
 
     @Override
     public String print() {
         String result = " ";
-        for (int i = head; i <= tail; i++) {
-            result += data[i];
-            if (i != tail) {
+        int temp = head;
+        for (int i = 0; i < numberElements; i++) {
+            result += data[temp];
+            temp = next(temp);
+            if (temp != tail) {
                 result += ", ";
             }
         }

@@ -5,7 +5,7 @@ public class MainArrayStack {
         ArrayStack stack = new ArrayStack(5);
         stack.push("Instituto");
         stack.push("Federal");
-        String temp = (String) stack.peek();
+        String temp = (String)stack.peek();
         System.out.println(temp);
 
         stack.push("da");
