@@ -12,9 +12,9 @@ public class ArrayList implements Listable{
 
     public ArrayList(int length) {
         data = new Object[length];
-        int head = 0;
-        int tail = -1;
-        int numberElements = 0;
+        this.head = 0;
+        this.tail = -1;
+        this.numberElements = 0;
     }
 
     @Override
@@ -50,9 +50,37 @@ public class ArrayList implements Listable{
     private int prior(int index) {
         return (index-1 + data.length) % data.length;
     }
+
     @Override
     public void insert(Object data, int logicalIndex) {
+        if (isFull()) {
+            System.err.println("List is full!");
+        }
+        if (logicalIndex < 0 || logicalIndex > numberElements) {
+            System.out.println("Invalid index!");
+        }
+        int physicalIndex = map(logicalIndex);
 
+        if (logicalIndex > (numberElements/2)) {    //se começar pelo tail
+            int aux = tail;
+            for (int i = 0; i < (this.data.length - logicalIndex); i++) {
+                this.data[next(aux)] = this.data[aux];
+                aux = prior(aux);
+            }
+            this.data[physicalIndex] = data;
+            numberElements++;
+            tail = next(tail);
+
+        } else {  //se começar pelo head
+            int aux = head;
+            for (int i = 0; i < logicalIndex; i++) {
+                this.data[prior(aux)] = this.data[aux];
+                aux = next(aux);
+            }
+            this.data[physicalIndex] = data;
+            numberElements++;
+            head = prior(head);
+        }
     }
 
     @Override
@@ -113,7 +141,33 @@ public class ArrayList implements Listable{
 
     @Override
     public Object delete(int logicalIndex) {
-        return null;
+        if (isEmpty()) {
+            System.err.println("list is empty!");
+        }
+        if (logicalIndex < 0 || logicalIndex >= numberElements) {
+            System.err.println("Invalid index!");
+        }
+        int physicalIndex = map(logicalIndex);
+        Object tempData = this.data[physicalIndex];
+        int aux = physicalIndex;
+
+        if (logicalIndex > (numberElements/2)) {  //se começar pelo tail
+            for (int i = 0; i < (numberElements - logicalIndex -1); i++) {
+                this.data[aux] = this.data[next(aux)];
+                aux = next(aux);
+            }
+            numberElements--;
+            tail = prior(tail);
+
+        } else {   //se começar pelo head
+            for (int i = 0; i < logicalIndex; i++) {
+                this.data[aux] = this.data[prior(aux)];
+                aux = prior(aux);
+            }
+            numberElements--;
+            head = next(head);
+        }
+        return tempData;
     }
 
     @Override
