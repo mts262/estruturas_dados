@@ -1,4 +1,4 @@
-package br.edu.ifba.vca.bsi.ed.linkedstack;
+package br.edu.ifba.vca.bsi.estruturasdedados.linkedstackdao.dao.repository;
 
 public class DoubleNode <T> {
     private T data;

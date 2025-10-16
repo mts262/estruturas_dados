@@ -1,4 +1,4 @@
-package br.edu.ifba.vca.bsi.ed.linkedstack;
+package br.edu.ifba.vca.bsi.estruturasdedados.linkedstackdao.dao.repository;
 
 public interface Stackable<T> {
     void push(T data);
