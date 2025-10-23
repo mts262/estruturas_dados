@@ -1,15 +1,14 @@
-package br.edu.ifba.vca.bsi.estruturasdedados.linkedstackdao.dao.repository;
-
+package br.edu.ifba.vca.bsi.ed.linkedstackdao.dao.repository;
 import java.util.NoSuchElementException;
 
 /**
  * Implemaentação de uma Pilha Dinâmica Genérica
  *
- * @author azul
+ * @author Matheus
  * @version 1.0
  * @since 06/10/2025
  */
-public class LinkedStack <T> implements Stackable<T> {
+public class LinkedStack <T> implements Stackable <T> {
     /**Aponta para o topo da pilha*/
     private DoubleNode<T> topPointer;
     /**Indica o número atual da pilha*/

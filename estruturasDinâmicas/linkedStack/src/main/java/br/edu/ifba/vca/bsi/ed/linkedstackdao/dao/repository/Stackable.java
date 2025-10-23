@@ -1,6 +1,6 @@
-package br.edu.ifba.vca.bsi.estruturasdedados.linkedstackdao.dao.repository;
+package br.edu.ifba.vca.bsi.ed.linkedstackdao.dao.repository;
 
-public interface Stackable<T> {
+public interface Stackable <T> {
     void push(T data);
     T pop();
     T peek();
