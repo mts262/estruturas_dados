@@ -202,7 +202,7 @@ public class CarDAOLinkedStack implements CarDAO{
         while (!cars.isEmpty()) {
             Car car = cars.pop();
             tempCars.push(car);
-            if (car.getColor().equalsIgnoreCase(color)) {
+            if (car.getColor() != null && car.getColor().equalsIgnoreCase(color)) {
                 foundCars.push(car);
             }
         }
@@ -228,7 +228,7 @@ public class CarDAOLinkedStack implements CarDAO{
         while (!cars.isEmpty()) {
             Car car = cars.pop();
             tempCars.push(car);
-            if (car.getOwnerName().equalsIgnoreCase(owner)) {
+            if (car.getOwnerName() != null && car.getOwnerName().equalsIgnoreCase(owner)) {
                 foundCars.push(car);
             }
         }
@@ -240,31 +240,127 @@ public class CarDAOLinkedStack implements CarDAO{
         return stackToArray(foundCars);
     }
 
+    /**
+     * Dado um intervalo de tempo, busca carros dentro do
+     * intervaldo pelo tempo de chegada do carro
+     *
+     * @param initialMoment, data inicial do intervalo
+     * @param finalMoment, data final do intervalo
+     * @return array com carros encontrados dentro do intervalo
+     */
     @Override
     public Car[] getCarsByMomentArrival(LocalDateTime initialMoment, LocalDateTime finalMoment) {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        Stackable<Car> foundCars = new LinkedStack<>(20);
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            if (car.getArrived() != null) {
+                if (!car.getArrived().isBefore(initialMoment) && !car.getArrived().isAfter(finalMoment)) {
+                    foundCars.push(car);
+                }
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        return stackToArray(foundCars);
     }
 
     // Operações de análise e estatísticas
+    /**
+     * Busca o carro com a data de chegada mais recente
+     *
+     * @return carro encontrado
+     */
     @Override
     public Car getCarByNewestArrival() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        Car resultCar = null;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            if (car.getArrived() != null) {
+                resultCar = car;
+                break;
+            }
+        }
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+
+            if (car.getArrived() != null && (car.getArrived().isAfter(resultCar.getArrived()))) {
+                resultCar = car;
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        return resultCar;
     }
 
+    /**
+     * Busca o carro com a data de chegada mais antiga
+     *
+     * @return carro encontrado
+     */
     @Override
     public Car getCarByOldestArrival() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        Car resultCar = null;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            if (car.getArrived() != null) {
+                resultCar = car;
+                break;
+            }
+        }
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+
+            if (car.getArrived() != null && (car.getArrived().isBefore(resultCar.getArrived()))) {
+                resultCar = car;
+            }
+
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        return resultCar;
     }
 
     // Operações de relatório e estatísticas
+    /**
+     * Imprime todos os carros que estão na pilha
+     *
+     * @return String representando os carros da pilha
+     */
     @Override
     public String printCars() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        return cars.toString();
     }
 
+    /**
+     * Busca a quantidade total de carros presentes na pilha
+     *
+     * @return int com o número total
+     */
     @Override
     public int getTotalCars() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+       return countElements(cars);
     }
 
     @Override
@@ -283,14 +379,41 @@ public class CarDAOLinkedStack implements CarDAO{
     }
 
     // Operações de gerenciamento
+    /**
+     * Verifica se o carro está na pilha
+     *
+     * @param plateLicense, placa do carro a ser verificado
+     * @return true se estiver na pilha, e false caso contrário
+     */
     @Override
     public boolean isCarInPlaced(String plateLicense) {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        boolean isPlaced = false;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            if (plateLicense.equalsIgnoreCase(car.getLicensePlate())) {
+                isPlaced = true;
+                break;
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        return isPlaced;
     }
 
+    /**
+     * Apaga todos os carros da pilha, zerando a pilha
+     */
     @Override
     public void clearAllCars() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        while (!cars.isEmpty()) {
+            cars.pop();
+        }
     }
 
     @Override
