@@ -3,7 +3,11 @@ package br.edu.ifba.vca.bsi.ed.linkedstackdao.dao;
 import br.edu.ifba.vca.bsi.ed.linkedstackdao.dao.repository.Stackable;
 import br.edu.ifba.vca.bsi.ed.linkedstackdao.dao.repository.LinkedStack;
 import br.edu.ifba.vca.bsi.ed.linkedstackdao.model.Car;
+
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.NoSuchElementException;
 
 public class CarDAOLinkedStack implements CarDAO{
     private Stackable<Car> cars = new LinkedStack<>(20);
@@ -363,19 +367,115 @@ public class CarDAOLinkedStack implements CarDAO{
        return countElements(cars);
     }
 
+    /**
+     * Busca a marca mais popular dentre os carros que estão na pilha
+     *
+     * @return a marca mais popular encontrada
+     */
     @Override
     public String getMostPopularMark() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        String resultMark = null;
+        int most = 0;
+
+        if (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            most = countMarkOcurrences(car.getMark(), cars);
+            resultMark = car.getMark();
+        }
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            int newMost = countMarkOcurrences(car.getMark(), cars);
+            if (newMost > most) {
+                resultMark = car.getMark();
+                most = newMost;
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        return  resultMark;
     }
 
+    /**
+     * Busca o modelo mais popular dentre os carros que estão na pilha
+     *
+     * @return o modelo mais popular encontrado
+     */
     @Override
     public String getMostPopularModel() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        String resultModel = null;
+        int most = 0;
+
+        if (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            most = countModelOcurrences(car.getModel(), cars);
+            resultModel = car.getModel();
+        }
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            int newMost = countModelOcurrences(car.getModel(), cars);
+            if (newMost > most) {
+                resultModel = car.getModel();
+                most = newMost;
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        return  resultModel;
     }
 
+    /**
+     *Busca a cor mais popular dentre os carros que estão na pilha
+     *
+     * @return a cor mais popular encontrada
+     */
     @Override
     public String getMostPopularColor() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        String resultColor = null;
+        int most = 0;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            if (car.getColor() != null) {
+                most = countColorsOcurrences(car.getColor(), cars);
+                resultColor = car.getColor();
+                break;
+            }
+        }
+
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            if (car.getColor() != null) {
+                int newMost = countColorsOcurrences(car.getColor(), cars);
+                if (newMost > most) {
+                    resultColor = car.getColor();
+                    most = newMost;
+                }
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        return  resultColor;
     }
 
     // Operações de gerenciamento
@@ -416,59 +516,246 @@ public class CarDAOLinkedStack implements CarDAO{
         }
     }
 
+    /**
+     * Remove da pilha todos os carros cuja data de chegada seja anterior à data informada.
+     *
+     * @param date data limite; carros que chegaram antes dela serão removidos
+     */
     @Override
     public void removeCarsOlderThan(LocalDateTime date) {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            if (car.getArrived() != null && car.getArrived().isBefore(date)) {
+                continue;
+            }
+            tempCars.push(car);
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
     }
 
+    /**
+     *Busca carros com duração estacionado dentro de um horário definido
+     * 
+     * @param minHours hora mínima
+     * @param maxHours hora máxima
+     * @return carros encontrados
+     */
     @Override
     public Car[] getCarsByParkingDuration(long minHours, long maxHours) {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        Stackable<Car> foundCars = new LinkedStack<>(20);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            if (car.getArrived() != null) {
+                long parkedDuration = Duration.between(car.getArrived(), now).toHours();
+                if (parkedDuration >= minHours && parkedDuration <= maxHours) {
+                    foundCars.push(car);
+                }
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+        
+        return stackToArray(foundCars);
     }
 
+    /**
+     * Verifica a quantidade de espaços ainda disponíveis na pilha de carros
+     *
+     * @return número de espaços disponíveis
+     */
     @Override
     public int getAvailableSpaces() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        return getMaxCapacity() - countElements(cars);
     }
 
+    /**
+     * verifica se o estacionamento está vazio
+     *
+     * @return true se estiver vazio, e false caso contrário
+     */
     @Override
     public boolean isParkingEmpty() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+       return cars.isEmpty();
     }
 
+    /**
+     * Retorna a capacidade máxima da pilha de carros
+     *
+     * @return capacidade máxima da pilha
+     */
     @Override
     public int getMaxCapacity() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> aux = new LinkedStack<>(20);
+        
+        while (!aux.isFull()){
+            aux.push(cars.peek());
+        }
+
+        int capacity = countElements(aux);
+        return capacity;
     }
 
+    /**
+     * Retorna a taxa de ocupação do estacionamento em porcentagem.
+     *
+     * @return int representando a porcentagem de vagas ocupadas (0 a 100)
+     */
     @Override
     public int getOccupancyRate() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        int totalCars = countElements(cars);
+        int maxCapacity = getMaxCapacity();
+
+        if (maxCapacity == 0) {
+            return 0;
+        }
+
+        return (totalCars * 100) / maxCapacity;
     }
 
+    /**
+     * verifica se o estacionamento está cheio
+     *
+     * @return true se estiver cheio, e false caso contrário
+     */
     @Override
     public boolean isParkingFull() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        return cars.isFull();
     }
 
+    /**
+     * Retorna a duração que um carro está estacionado em horas, dado sua placa.
+     *
+     * @param plateLicense placa do carro a ser verificado
+     * @return duração em horas que o carro está estacionado
+     * @throws java.util.NoSuchElementException se o carro não for encontrado na pilha
+     *         ou se o carro não tiver a hora de chegada definida
+     */
     @Override
     public long getParkingDuration(String plateLicense) {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        Car foundCar = null;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+            if (car.getLicensePlate().equalsIgnoreCase(plateLicense)) {
+                foundCar = car;
+                break;
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+        
+        if (foundCar == null || foundCar.getArrived() == null) {
+            throw new NoSuchElementException("Carro não encontrado ou sem hora de chegada definida");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        return Duration.between(foundCar.getArrived(), now).toHours();
+
     }
 
+    /**
+     * Remove todos os carros de um determinado proprietário da pilha.
+     *
+     * @param owner nome do proprietário cujos carros serão removidos
+     */
     @Override
     public void removeCarsByOwner(String owner) {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            if (car.getOwnerName() != null && car.getOwnerName().equalsIgnoreCase(owner)) {
+                continue;
+            }
+            tempCars.push(car);
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
     }
 
+    /**
+     * Calcula o tempo médio de chegada dos carros na pilha.
+     *
+     * @return tempo médio de chegada em minutos
+     * @throws java.util.NoSuchElementException se não houver carros com data de chegada definida
+     */
     @Override
     public long getAverageArrivalTime() {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        long totalMinutes = 0;
+        int count = 0;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+
+            if (car.getArrived() != null) {
+                long minutes;
+                minutes = car.getArrived().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 60000;
+                totalMinutes += minutes;
+                count++;
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        if (count == 0) {
+            throw new NoSuchElementException("Não há carros com data de chegada definida");
+        }
+
+        return totalMinutes / count;
     }
 
+
+    /**
+     * Busca os carros que estão estacionados há mais de um determinado número de horas.
+     *
+     * @param thresholdHours número de horas de permanência mínima
+     * @return array com os carros encontrados
+     */
     @Override
     public Car[] getCarsWithLongParking(long thresholdHours) {
-        throw new UnsupportedOperationException("Operação ainda não implementada");
+        Stackable<Car> tempCars = new LinkedStack<>(20);
+        Stackable<Car> foundCars = new LinkedStack<>(20);
+        LocalDateTime now = LocalDateTime.now();
+
+        while (!cars.isEmpty()) {
+            Car car = cars.pop();
+            tempCars.push(car);
+
+            if (car.getArrived() != null) {
+                long parkedHours = Duration.between(car.getArrived(), now).toHours();
+                if (parkedHours > thresholdHours) {
+                    foundCars.push(car);
+                }
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.push(tempCars.pop());
+        }
+
+        return stackToArray(foundCars);
     }
 
     /**
@@ -498,12 +785,90 @@ public class CarDAOLinkedStack implements CarDAO{
         int count = 0;
 
         while (!stack.isEmpty()) {
-            tempCars.push(cars.pop());
+            tempCars.push(stack.pop());
             count++;
         }
 
         while (!tempCars.isEmpty()) {
             stack.push(tempCars.pop());
+        }
+
+        return count;
+    }
+
+    /**
+     * Conta o número de vezes que uma marca se repete na pilha
+     *
+     * @param mark, marca a ser contada
+     * @param stack, pilha temporária a ser desempilhada para a verificação
+     * @return int com a quantidade de vezes que a marca apareceu
+     */
+    private int countMarkOcurrences(String mark, Stackable<Car> stack) {
+        Stackable<Car> aux = new LinkedStack<>(20);
+        int count = 0;
+
+        while (!stack.isEmpty()) {
+            Car car = stack.pop();
+            aux.push(car);
+            if (car.getMark().equalsIgnoreCase(mark)) {
+                count++;
+            }
+        }
+
+        while (!aux.isEmpty()) {
+            stack.push(aux.pop());
+        }
+
+        return count;
+    }
+
+    /**
+     * Conta o número de vezes que um modelo se repete na pilha
+     *
+     * @param model, modelo a ser contado
+     * @param stack, pilha temporária a ser desempilhada para a verificação
+     * @return int com a quantidade de vezes que o modelo apareceu
+     */
+    private int countModelOcurrences(String model, Stackable<Car> stack) {
+        Stackable<Car> aux = new LinkedStack<>(20);
+        int count = 0;
+
+        while (!stack.isEmpty()) {
+            Car car = stack.pop();
+            aux.push(car);
+            if (car.getModel().equalsIgnoreCase(model)) {
+                count++;
+            }
+        }
+
+        while (!aux.isEmpty()) {
+            stack.push(aux.pop());
+        }
+
+        return count;
+    }
+
+    /**
+     * Conta o número de vezes que uma cor se repete na pilha
+     *
+     * @param color, cor a ser contada
+     * @param stack, pilha temporária a ser desempilhada para a verificação
+     * @return int com a quantidade de vezes que a cor apareceu
+     */
+    private int countColorsOcurrences(String color, Stackable<Car> stack) {
+        Stackable<Car> aux = new LinkedStack<>(20);
+        int count = 0;
+
+        while (!stack.isEmpty()) {
+            Car car = stack.pop();
+            aux.push(car);
+            if (car.getColor() != null && car.getColor().equalsIgnoreCase(color)) {
+                count++;
+            }
+        }
+
+        while (!aux.isEmpty()) {
+            stack.push(aux.pop());
         }
 
         return count;

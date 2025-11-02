@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class Car {
     private final String licensePlate;            // obrigatório, imutável
     private String mark;             // obrigatório
-    private String model;
+    private String model;           //obrigatório
     private String color;
     private String ownerName;
     private LocalDateTime arrived;
