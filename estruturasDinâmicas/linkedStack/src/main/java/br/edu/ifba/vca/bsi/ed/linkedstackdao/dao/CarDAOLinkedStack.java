@@ -9,7 +9,21 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.NoSuchElementException;
 
+/**
+ * Implemantação de um gerenciamento de carros utilizando uma estrutura de dados do
+ * tipo Pilha Dinâmica
+ *
+ * @author Matheus Pereira Rodrigues
+ * @version  1.0
+ * @since 02-11-2025
+ * @see CarDAO
+ * @see Car
+ * @see Stackable
+ * @see LinkedStack
+ */
 public class CarDAOLinkedStack implements CarDAO{
+    /**Pilha dinâmica primcipal que armazenrá os carros
+     * com capacidade inicial de 20*/
     private Stackable<Car> cars = new LinkedStack<>(20);
 
     // Operações básicas CRUD

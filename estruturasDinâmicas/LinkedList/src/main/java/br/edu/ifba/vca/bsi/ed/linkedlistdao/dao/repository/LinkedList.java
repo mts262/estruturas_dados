@@ -58,9 +58,46 @@ public class LinkedList<T> implements Listable<T> {
         amount++;
     }
 
+    /**
+     * Insere um novo elemento dado uma posição a escolha
+     *
+     * @param index, posição de onde o dado será inserido
+     * @param data, dado a ser inserido
+     * @throws OverflowException se a lista estiver cheia
+     * @throws IndexOutOfBoundsException se o indíce passado for inválido
+     */
     @Override
     public void insert(int index, T data) {
+        if (isFull()) {
+            throw new OverflowException("List is full!");
+        }
+        if (index < 0 || index >= amount) {
+            throw new IndexOutOfBoundsException("Invalid index!");
+        }
+        DoubleNode<T> newNode = new DoubleNode<>(data);
+        DoubleNode<T> previous = null;
+        DoubleNode<T> next = head;
 
+        for (int i = 0; i < index; i++) {
+            previous = next;
+            next = next.getNext();
+        }
+
+        if (previous != null) {
+            previous.setNext(newNode);
+        } else {
+            head = newNode;
+        }
+
+        if (next != null) {
+            next.setPrevious(newNode);
+        } else {
+            tail = newNode;
+        }
+
+        newNode.setNext(next);
+        newNode.setPrevious(previous);
+        amount++;
     }
 
     /**
@@ -79,7 +116,7 @@ public class LinkedList<T> implements Listable<T> {
      * @param index, indíce do dado a ser removido
      * @return dado removido
      * @throws UnderflowException, se a lista estiver vazia
-     * @throws IndexOutOfBoundsException, se o indíce for inválido
+     * @throws IndexOutOfBoundsException, se o passado indíce for inválido
      */
     @Override
     public T delete(int index) {
