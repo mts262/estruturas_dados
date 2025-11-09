@@ -4,7 +4,10 @@ import br.edu.ifba.vca.bsi.ed.linkeddequedao.dao.repository.DEQueable;
 import br.edu.ifba.vca.bsi.ed.linkeddequedao.dao.repository.LinkedDEQue;
 import br.edu.ifba.vca.bsi.ed.linkeddequedao.model.Car;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.NoSuchElementException;
 
 
 /**
@@ -164,64 +167,318 @@ public class CarDAOLinkedDEQue implements CarDAO{
         }
     }
 
+    /**
+     * Busca um carro na fila pela sua placa
+     *
+     * @param licensePlate, placa do carro a ser buscado
+     * @return carro encontrado
+     */
     @Override
     public Car getCarByLicensePlate(String licensePlate) {
-        return null;
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        Car resultCar = null;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getLicensePlate().equalsIgnoreCase(licensePlate)) {
+                resultCar = car;
+                break;
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.beginEnqueue(tempCars.endDequeue());
+        }
+
+        return resultCar;
     }
 
+    /**
+     * Busca todos os carros na fila por uma mesma marca
+     *
+     * @param mark, marca a ser buscada
+     * @return array com os carros encontrados
+     */
     @Override
     public Car[] getCarsByMark(String mark) {
-        return new Car[0];
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        DEQueable<Car> foundCars = new LinkedDEQue<>(20);
+        
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getMark().equalsIgnoreCase(mark)) {
+                foundCars.endEnqueue(car);
+            }
+        }
+        
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+
+        return dequeToArray(foundCars);
     }
 
+    /**
+     * Busca todos os carros na fila por um mesmo modelo
+     *
+     * @param model, modelo a ser buscado
+     * @return array com os carros encontrados
+     */
     @Override
     public Car[] getCarsByModel(String model) {
-        return new Car[0];
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        DEQueable<Car> foundCars = new LinkedDEQue<>(20);
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getModel().equalsIgnoreCase(model)) {
+                foundCars.endEnqueue(car);
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+
+        return dequeToArray(foundCars);
     }
 
+    /**
+     * Busca todos os carros na fila por uma mesma cor
+     *
+     * @param color, cor a ser buscada
+     * @return array com os carros encontrados
+     */
     @Override
     public Car[] getCarsByColor(String color) {
-        return new Car[0];
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        DEQueable<Car> foundCars = new LinkedDEQue<>(20);
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getColor() != null && car.getColor().equalsIgnoreCase(color)) {
+                foundCars.endEnqueue(car);
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+
+        return dequeToArray(foundCars);
     }
 
+    /**
+     * Busca todos os carros na fila por um mesmo proprietário
+     *
+     * @param owner, nome do proprietário a ser buscado
+     * @return array com os carros encontrados
+     */
     @Override
     public Car[] getCarsByOwner(String owner) {
-        return new Car[0];
-    }
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        DEQueable<Car> foundCars = new LinkedDEQue<>(20);
 
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getOwnerName() != null && car.getOwnerName().equalsIgnoreCase(owner)) {
+                foundCars.endEnqueue(car);
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+
+        return dequeToArray(foundCars);    }
+
+    /**
+     * Busca todos os carros na fila que estão num intervalo de tempo definido,
+     * pela sua data de chegada
+     *
+     * @param initialMoment, data inicial do intervalo
+     * @param finalMoment, data final do intervalo
+     * @return array com os carros encontrados
+     */
     @Override
     public Car[] getCarsByMomentArrival(LocalDateTime initialMoment, LocalDateTime finalMoment) {
-        return new Car[0];
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        DEQueable<Car> foundCars = new LinkedDEQue<>(20);
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getArrived() != null) {
+                if (car.getArrived().isAfter(initialMoment) && car.getArrived().isBefore(finalMoment)) {
+                    foundCars.endEnqueue(car);
+                }
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+        
+        return dequeToArray(foundCars);
     }
 
+    /**
+     * Busca os carro que estão estacionados há mais de um determinado número de horas
+     * 
+     * @param thresholdHours, número de horas de permanênci mínima
+     * @return array com os carros encontrados
+     */
     @Override
     public Car[] getCarsWithLongParking(long thresholdHours) {
-        return new Car[0];
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        DEQueable<Car> foundCars = new LinkedDEQue<>(20);
+        LocalDateTime now = LocalDateTime.now();
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getArrived() != null) {
+                long parkedHours = Duration.between(car.getArrived(), now).toHours();
+                if (parkedHours > thresholdHours) {
+                    foundCars.endEnqueue(car);
+                }
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+        
+        return dequeToArray(foundCars);
     }
 
+    /**
+     * Calcula o tempo médio de chegada dos na pilha
+     *
+     * @return tempo médio de chegada em minutos
+     * @throws java.util.NoSuchElementException, se não houver carros com data de chegada definida
+     */
     @Override
     public long getAverageArrivalTime() {
-        return 0;
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        long totalMinutes = 0;
+        int count = 0;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getArrived() != null) {
+                long minutes = car.getArrived().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 60000;
+                totalMinutes += minutes;
+                count++;
+            }
+        }
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+
+        if (count == 0) {
+            throw new NoSuchElementException("Não há carros com a data de chegada definida");
+        }
+
+        return totalMinutes / count;
     }
 
+    /**
+     * Busca o carro com a data de chegada mais recente
+     *
+     * @return carro com a data de chegada mais recente
+     * @throws java.util.NoSuchElementException, se não houver carros com data de chegada definda
+     */
     @Override
     public Car getCarByNewestArrival() {
-        return null;
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        Car resultCar = null;
+        
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getArrived() != null) {
+                resultCar = car;
+                break;
+            }
+        }
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getArrived() != null) {
+                if (car.getArrived().isAfter(resultCar.getArrived())) {
+                    resultCar = car;
+                }
+            }
+        }
+        
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+
+        if (resultCar == null) {
+            throw  new NoSuchElementException("Não há carros com data de chegada definida");
+        }
+
+        return resultCar;
     }
 
+    /**
+     * Busca o carro com a data de chegada mais antiga
+     *
+     * @return carro com a data de chegada mais antiga
+     * @throws java.util.NoSuchElementException, se não houver carros com data de chegada definda
+     */
     @Override
     public Car getCarByOldestArrival() {
-        return null;
+        DEQueable<Car> tempCars = new LinkedDEQue<>(20);
+        Car resultCar = null;
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getArrived() != null) {
+                resultCar = car;
+                break;
+            }
+        }
+
+        while (!cars.isEmpty()) {
+            Car car = cars.beginDequeue();
+            tempCars.endEnqueue(car);
+            if (car.getArrived() != null) {
+                if (car.getArrived().isBefore(resultCar.getArrived())) {
+                    resultCar = car;
+                }
+            }
+        }
+
+        while (!tempCars.isEmpty()) {
+            cars.endEnqueue(tempCars.beginDequeue());
+        }
+
+        if (resultCar == null) {
+            throw  new NoSuchElementException("Não há carros com data de chegada definida");
+        }
+
+        return resultCar;
     }
 
     @Override
     public String printCars() {
-        return "";
+        return cars.toString();
     }
 
     @Override
     public int getTotalCars() {
-        return 0;
+        return countElements(cars);
     }
 
     @Override
@@ -256,7 +513,9 @@ public class CarDAOLinkedDEQue implements CarDAO{
 
     @Override
     public void clearAllCars() {
-
+        while (!cars.isEmpty()) {
+            cars.beginDequeue();
+        }
     }
 
     @Override
