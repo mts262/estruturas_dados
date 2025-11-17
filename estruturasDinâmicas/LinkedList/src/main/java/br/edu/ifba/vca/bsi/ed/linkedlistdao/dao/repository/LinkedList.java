@@ -17,6 +17,16 @@ public class LinkedList<T> implements Listable<T> {
     /**Indica a quantidade de elementos na lista*/
     private int amount;
 
+    /** Ponteiros do cursor para selects sequenciais */
+    private DoubleNode<T> cursorNode = null;
+    private int cursorIndex = -1;
+
+    /** Reseta o cursor sempre que a lista é modificada */
+    private void resetCursor() {
+        cursorNode = null;
+        cursorIndex = -1;
+    }
+
     /**
      * Construtor sem argurmentos, com inicialização da capacidade para 10 elementos
      */
@@ -56,6 +66,8 @@ public class LinkedList<T> implements Listable<T> {
         newNode.setPrevious(tail);
         tail = newNode;
         amount++;
+
+        resetCursor();
     }
 
     /**
@@ -98,6 +110,8 @@ public class LinkedList<T> implements Listable<T> {
         newNode.setNext(next);
         newNode.setPrevious(previous);
         amount++;
+
+        resetCursor();
     }
 
     /**
@@ -108,15 +122,12 @@ public class LinkedList<T> implements Listable<T> {
         amount = 0;
         head = null;
         tail = null;
+
+        resetCursor();
     }
 
     /**
-     * Deleta um dado da lista, escolhendo o que deseja remover
-     *
-     * @param index, indíce do dado a ser removido
-     * @return dado removido
-     * @throws UnderflowException, se a lista estiver vazia
-     * @throws IndexOutOfBoundsException, se o passado indíce for inválido
+     * Deleta um dado da lista
      */
     @Override
     public T delete(int index) {
@@ -128,12 +139,12 @@ public class LinkedList<T> implements Listable<T> {
             throw new IndexOutOfBoundsException("Invalid index!");
         }
         DoubleNode<T> aux;
-        if (index <= (amount/2)) {     //começa pelo head
+        if (index <= (amount/2)) {
             aux = head;
             for (int i = 0; i < index; i++) {
                 aux = aux.getNext();
             }
-        } else {                     //começa pelo tail
+        } else {
             aux = tail;
             for (int i = 0; i < amount - 1 - index; i++) {
                 aux = aux.getPrevious();
@@ -156,50 +167,56 @@ public class LinkedList<T> implements Listable<T> {
         }
 
         amount--;
+
+        resetCursor();
         return data;
     }
 
     /**
-     * Seleciona um dado da lista a escolha
-     *
-     * @param index, indíce do dado a ser selecionado
-     * @return dado selecionado
-     * @throws UnderflowException, se a lista estiver vazia
-     * @throws IndexOutOfBoundsException, se o idíce for inválido
+     * SELECT otimizado com ponteiro (cursor)
      */
     @Override
     public T select(int index) {
-        T data = null;
         if (isEmpty()) {
             throw new UnderflowException("List is empty!");
         }
         if (index < 0 || index >= amount) {
             throw new IndexOutOfBoundsException("Invalid index!");
         }
+
+        // Caso 1: acessar o próximo elemento sequencialmente
+        if (cursorNode != null && index == cursorIndex + 1) {
+            cursorNode = cursorNode.getNext();
+            cursorIndex++;
+            return cursorNode.getData();
+        }
+
+        // Caso 2: seleção normal (calcula do zero)
         DoubleNode<T> aux;
-        if (index <= (amount/2)) {     //começa pelo head
+        if (index <= (amount / 2)) {
             aux = head;
             for (int i = 0; i < index; i++) {
                 aux = aux.getNext();
             }
-        } else {                     //começa pelo tail
+        } else {
             aux = tail;
-            for (int i = 0; i < amount - 1 - index; i++) {
+            for (int i = amount - 1; i > index; i--) {
                 aux = aux.getPrevious();
             }
         }
-        data = aux.getData();
-        return data;
+
+        cursorNode = aux;
+        cursorIndex = index;
+
+        return aux.getData();
     }
 
     /**
-     * Seleciona todos os dados da lista e o retornam na forma de array
-     *
-     * @return array com os dados
+     * Seleciona todos os dados
      */
     @Override
     public T[] selectAll() {
-        T[] temp = (T[])new Object[size()];
+        T[] temp = (T[]) new Object[size()];
         DoubleNode<T> aux = head;
 
         for (int i = 0; i < amount; i++) {
@@ -210,14 +227,6 @@ public class LinkedList<T> implements Listable<T> {
         return temp;
     }
 
-    /**
-     * Atualiza um dado da lista a escolha
-     *
-     * @param index, indíce do dado a ser atualizado
-     * @param data, novo dado
-     * @throws UnderflowException, se a lista estiver vazia
-     * @throws IndexOutOfBoundsException, se o indíce for inválido
-     */
     @Override
     public void update(int index, T data) {
         if (isEmpty()) {
@@ -227,55 +236,37 @@ public class LinkedList<T> implements Listable<T> {
             throw new IndexOutOfBoundsException("Invalid index!");
         }
         DoubleNode<T> aux;
-        if (index <= (amount/2)) {     //começa pelo head
+        if (index <= (amount/2)) {
             aux = head;
             for (int i = 0; i < index; i++) {
-                aux.getNext();
+                aux = aux.getNext();
             }
-        } else {                     //começa pelo tail
+        } else {
             aux = tail;
-            for (int i = 0; i < amount - 1 - index; i++) {
+            for (int i = amount - 1 - index; i > 0; i--) {
                 aux = aux.getPrevious();
             }
         }
         aux.setData(data);
+
+        resetCursor();
     }
 
-    /**
-     * Quantidade de elementos que formam o tamanho da lista
-     *
-     * @return número de elementos na lista
-     */
     @Override
     public int size() {
         return amount;
     }
 
-    /**
-     * Verifica se a lista está cheia
-     *
-     * @return true se a lista estiver cheia, e false caso o contrário
-     */
     @Override
     public boolean isFull() {
         return amount == capacity;
     }
 
-    /**
-     * Verifica se a lista está vazia
-     *
-     * @return true se a lista estiver vazia, e false caso o contrário
-     */
     @Override
     public boolean isEmpty() {
         return amount == 0;
     }
 
-    /**
-     * Imprime os dados da fila
-     *
-     * @return String com todos os dados entre colchetes e separados por vígula
-     */
     @Override
     public String print() {
         String result = "";
@@ -284,11 +275,11 @@ public class LinkedList<T> implements Listable<T> {
         for (int i = 0; i < amount; i++) {
             result += aux.getData();
             if (i != amount-1) {
-                result+=", ";
+                result += ", ";
             }
             aux = aux.getNext();
         }
 
-        return "[" +result+ "]";
+        return "[" + result + "]";
     }
 }
